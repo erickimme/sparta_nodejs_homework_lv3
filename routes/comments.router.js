@@ -104,7 +104,7 @@ router.get('/posts/:postId/comments', async (req, res, next) => {
 // 7. error handling : # 400 body의 content를 입력받지 못한 경우 { message: '댓글 내용을 입력해주세요.' } 출력
 // 7. error handling : # 400 body 또는 params를 입력받지 못한 경우 { message: '데이터 형식이 올바르지 않습니다.' } 출력
 // 7. error handling : # 404 _commentId에 해당하는 댓글이 존재하지 않을 경우 { message: '댓글 조회에 실패하였습니다.' } 출력
-router.put('posts/:postId/comments/:commentId', async (req, res, next) => {
+router.put('/posts/:postId/comments/:commentId', async (req, res, next) => {
     console.log("hello");
     const { postId, commentId } = req.params;
     const { password, content } = req.body;
@@ -146,7 +146,7 @@ router.put('posts/:postId/comments/:commentId', async (req, res, next) => {
 
 /* 댓글 삭제 Logic */
 // 1. request body input : password
-// 2. paramerter : posts/:postId/comments/:commentId
+// 2. paramerter : /posts/:postId/comments/:commentId
 // 3. validation check : password
 // 4. select comment in Comments table by commentId
 // 5. 댓글 조회되었다면 해당하는 게시글과 댓글의 `password`가 일치하는지 확인합니다.
@@ -154,7 +154,7 @@ router.put('posts/:postId/comments/:commentId', async (req, res, next) => {
 // 7. response : {  "message": "댓글을 삭제하였습니다."} 출력
 // 8. error handling : # 400 body 또는 params를 입력받지 못한 경우 { message: '데이터 형식이 올바르지 않습니다.' } 출력
 // 8. error handling : # 404 _commentId에 해당하는 댓글이 존재하지 않을 경우 { message: '댓글 조회에 실패하였습니다.' } 출력
-router.delete('posts/:postId/comments/:commentId', async (req, res, next) => {
+router.delete('/posts/:postId/comments/:commentId', async (req, res, next) => {
     const { postId, commentId } = req.params;
     const { password } = req.body;
 
