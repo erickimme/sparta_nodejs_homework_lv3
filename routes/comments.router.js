@@ -13,29 +13,29 @@ const router = express.Router(); // express.Router()를 이용해 라우터를 �
 // 5. error handling : # 400 body 또는 params를 입력받지 못한 경우 { message: '데이터 형식이 올바르지 않습니다.' } 출력
 // 5. error handling : # 400 body의 content를 입력받지 못한 경우 { message: '댓글 내용을 입력해주세요.' } 출력
 router.post('/posts/:postId/comments', async (req, res, next) => {
-    const { postId } = req.params;
-    const { user, password, content } = req.body;
+  const { postId } = req.params;
+  const { user, password, content } = req.body;
 
-    if (!postId || !user || !password || !content) {
-        res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
-    } else if (!content) {
-        res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
-    } else {
-        try {
-            const createdComment = await prisma.comments.create({
-                data: {
-                    user,
-                    password,
-                    content,
-                    postId,
-                },
-            });
-            res.status(201).json({ message: '댓글을 생성하였습니다.' });
-        } catch (error) {
-            console.error(error);
-            next(error);
-        }
+  if (!postId || !user || !password || !content) {
+    res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+  } else if (!content) {
+    res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
+  } else {
+    try {
+      const createdComment = await prisma.comments.create({
+        data: {
+          user,
+          password,
+          content,
+          postId,
+        },
+      });
+      res.status(201).json({ message: '댓글을 생성하였습니다.' });
+    } catch (error) {
+      console.error(error);
+      next(error);
     }
+  }
 });
 
 /*  게시글 별 댓글 전체 목록 조회 Logic */
@@ -62,37 +62,36 @@ router.post('/posts/:postId/comments', async (req, res, next) => {
 // 5. error handling : # 400 postId를 입력받지 못한 경우 { message: '데이터 형식이 올바르지 않습니다.' } 출력
 // 5. error handling : # 404 postId에 해당하는 댓글이 없는 경우 { message: '댓글 조회에 실패하였습니다.' } 출력
 router.get('/posts/:postId/comments', async (req, res, next) => {
-    const { postId } = req.params;
-    if (!postId) {
-        res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
-    } else {
-        try {
-            const comments = await prisma.comments.findMany({
-                where: {
-                    postId,
-                },
-                orderBy: {
-                    createdAt: 'desc',
-                },
-                select: {
-                    commentId: true,
-                    user: true,
-                    content: true,
-                    createdAt: true,
-                },
-            });
-            if (comments.length === 0) {
-                res.status(404).json({ message: '댓글 조회에 실패하였습니다.' });
-            } else {
-                res.status(200).json({ data: comments });
-            }
-        } catch (error) {
-            console.error(error);
-            next(error);
-        }
+  const { postId } = req.params;
+  if (!postId) {
+    res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+  } else {
+    try {
+      const comments = await prisma.comments.findMany({
+        where: {
+          postId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        select: {
+          commentId: true,
+          user: true,
+          content: true,
+          createdAt: true,
+        },
+      });
+      if (comments.length === 0) {
+        res.status(404).json({ message: '댓글 조회에 실패하였습니다.' });
+      } else {
+        res.status(200).json({ data: comments });
+      }
+    } catch (error) {
+      console.error(error);
+      next(error);
     }
+  }
 });
-
 
 /* 댓글 수정 Logic */
 // 1. request body input : password, content
@@ -105,43 +104,42 @@ router.get('/posts/:postId/comments', async (req, res, next) => {
 // 7. error handling : # 400 body 또는 params를 입력받지 못한 경우 { message: '데이터 형식이 올바르지 않습니다.' } 출력
 // 7. error handling : # 404 _commentId에 해당하는 댓글이 존재하지 않을 경우 { message: '댓글 조회에 실패하였습니다.' } 출력
 router.put('/posts/:postId/comments/:commentId', async (req, res, next) => {
-    console.log("hello");
-    const { postId, commentId } = req.params;
-    const { password, content } = req.body;
+  const { postId, commentId } = req.params;
+  const { password, content } = req.body;
 
-    if (!postId, !commentId || !password || !content) {
-        res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
-    } else if (!content) {
-        res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
-    } else {
-        try {
-            const comment = await prisma.comments.findUnique({
-                where: {
-                    commentId,
-                },
-            });
-            if (!comment) {
-                res.status(404).json({ message: '댓글 조회에 실패하였습니다.' });
-            } else {
-                if (comment.password !== password) {
-                    res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
-                }
-                const updatedComment = await prisma.comments.update({
-                    where: {
-                        commentId,
-                        postId,
-                    },
-                    data: {
-                        content,
-                    },
-                });
-                res.status(200).json({ message: '댓글을 수정하였습니다.' });
-            }
-        } catch (error) {
-            console.error(error);
-            next(error);
+  if ((!postId, !commentId || !password || !content)) {
+    res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+  } else if (!content) {
+    res.status(400).json({ message: '댓글 내용을 입력해주세요.' });
+  } else {
+    try {
+      const comment = await prisma.comments.findUnique({
+        where: {
+          commentId,
+        },
+      });
+      if (!comment) {
+        res.status(404).json({ message: '댓글 조회에 실패하였습니다.' });
+      } else {
+        if (comment.password !== password) {
+          res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
         }
+        const updatedComment = await prisma.comments.update({
+          where: {
+            commentId,
+            postId,
+          },
+          data: {
+            content,
+          },
+        });
+        res.status(200).json({ message: '댓글을 수정하였습니다.' });
+      }
+    } catch (error) {
+      console.error(error);
+      next(error);
     }
+  }
 });
 
 /* 댓글 삭제 Logic */
@@ -155,37 +153,37 @@ router.put('/posts/:postId/comments/:commentId', async (req, res, next) => {
 // 8. error handling : # 400 body 또는 params를 입력받지 못한 경우 { message: '데이터 형식이 올바르지 않습니다.' } 출력
 // 8. error handling : # 404 _commentId에 해당하는 댓글이 존재하지 않을 경우 { message: '댓글 조회에 실패하였습니다.' } 출력
 router.delete('/posts/:postId/comments/:commentId', async (req, res, next) => {
-    const { postId, commentId } = req.params;
-    const { password } = req.body;
+  const { postId, commentId } = req.params;
+  const { password } = req.body;
 
-    if (!postId, !commentId || !password) {
-        res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
-    } else {
-        try {
-            const comment = await prisma.comments.findUnique({
-                where: {
-                    commentId,
-                },
-            });
-            if (!comment) {
-                res.status(404).json({ message: '댓글 조회에 실패하였습니다.' });
-            } else {
-                if (comment.password !== password) {
-                    res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
-                }
-                await prisma.comments.delete({
-                    where: {
-                        commentId,
-                        postId,
-                    },
-                });
-                res.status(200).json({ message: '댓글을 삭제하였습니다.' });
-            }
-        } catch (error) {
-            console.error(error);
-            next(error);
+  if ((!postId, !commentId || !password)) {
+    res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
+  } else {
+    try {
+      const comment = await prisma.comments.findUnique({
+        where: {
+          commentId,
+        },
+      });
+      if (!comment) {
+        res.status(404).json({ message: '댓글 조회에 실패하였습니다.' });
+      } else {
+        if (comment.password !== password) {
+          res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
         }
+        await prisma.comments.delete({
+          where: {
+            commentId,
+            postId,
+          },
+        });
+        res.status(200).json({ message: '댓글을 삭제하였습니다.' });
+      }
+    } catch (error) {
+      console.error(error);
+      next(error);
     }
+  }
 });
 
 export default router;
