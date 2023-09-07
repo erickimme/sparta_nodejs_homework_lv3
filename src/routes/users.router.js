@@ -56,6 +56,7 @@ router.post('/signup', async (req, res, next) => {
 
     // 닉네임, 패스워드 validate using joi
     // const value = await postUserSchema.validateAsync(req.body);
+    // *TODO: validateAsync()를 사용하면 에러가 발생한다. 왜?
     const { error, value } = postUserSchema.validate(req.body);
     console.log(value);
 
@@ -133,7 +134,6 @@ router.post('/login', async (req, res, next) => {
     }
 
     //로그인 성공 시, 로그인에 성공한 유저의 정보를 JWT를 활용하여 클라이언트에게 Cookie로 전달하기
-    console.log('user.userId:', user.userId);
     const token = jwt.sign({ userId: user.userId }, 'customized_secret_key');
     // authorization 쿠키 전달
     res.cookie('authorization', `Bearer ${token}`);

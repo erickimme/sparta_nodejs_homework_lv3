@@ -70,7 +70,7 @@ model Comments {
   PostId      String @map("PostId")
   UserId      String @map("UserId")
 
-  content     String @map("content") @db.Text
+  comment     String @map("comment") @db.Text
 
   createdAt DateTime @default(now()) @map("createdAt")
   updatedAt DateTime @updatedAt @map("updatedAt")

@@ -14,7 +14,7 @@ const PORT = 3018;
 
 app.use(logMiddleware);
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use('/api', [UsersRouter, PostsRouter, CommentsRouter]);
 app.use(errorHandlingMiddleware);

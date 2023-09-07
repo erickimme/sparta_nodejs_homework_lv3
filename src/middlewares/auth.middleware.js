@@ -9,7 +9,6 @@ export default async function (req, res, next) {
 
     const [tokenType, tokenValue] = authorization.split(' ');
 
-    // console.log('tokenType:', tokenType, 'tokenValue:', tokenValue);
     // // Bearer 토큰 형식인지 맞는지 확인
     if (tokenType !== 'Bearer') {
       // res.clearCookie(); // 인증에 실패하였을 경우 Cookie를 삭제합니다.
@@ -22,7 +21,7 @@ export default async function (req, res, next) {
 
     // JWT의 userId를 이용해 데이터베이스에서 사용자를 조회
     const user = await prisma.users.findFirst({
-      where: { userId: +userId },
+      where: { userId: userId },
     });
     if (!user) {
       res.clearCookie('authorization');
