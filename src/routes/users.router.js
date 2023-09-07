@@ -3,27 +3,12 @@ import bcrypt from 'bcrypt';
 import joi from 'joi';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../utils/prisma/index.js';
-import authMiddleware from '../middlewares/auth.middleware.js';
 import errorhandlingMiddleware from '../middlewares/error-handling.middleware.js';
 
 const router = express.Router();
 
 /* 사용자 회원가입 API Logic */
-// - 닉네임, 비밀번호, 비밀번호 확인을 **request**에서 전달받기
-// - 닉네임은 `최소 3자 이상, 알파벳 대소문자(a~z, A~Z), 숫자(0~9)`로 구성하기
-// - 비밀번호는 `최소 4자 이상이며, 닉네임과 같은 값이 포함된 경우 회원가입에 실패`로 만들기
-// - 비밀번호 확인은 비밀번호와 정확하게 일치하기
-// {  "nickname": "Developer",  "password": "1234",  "confirm": "1234"}
-// - 데이터베이스에 존재하는 닉네임을 입력한 채 회원가입 버튼을 누른 경우 "중복된 닉네임입니다." 라는 에러메세지를 **response**에 포함하기
-// # 201 회원가입에 성공한 경우
-// {  "message": "회원 가입에 성공하였습니다."}
-
 /* Joi유효성 검사 */
-// - value 데이터 - 필수적으로 존재
-// - value 데이터 - 문자열
-// - value 데이터 최소 1글자, 최대 50글자
-// - validate 실패했을 때 error
-
 // - 닉네임은 `최소 3자 이상, 알파벳 대소문자(a~z, A~Z), 숫자(0~9)`로 구성하기
 // - 비밀번호는 `최소 4자 이상이며, 닉네임과 같은 값이 포함된 경우 회원가입에 실패`로 만들기
 const nickname_pattern = /^[a-z|A-Z|0-9]+$/;
@@ -51,6 +36,15 @@ const postUserSchema = joi.object({
   }),
 });
 
+/* 회원가입 */
+// - 닉네임, 비밀번호, 비밀번호 확인을 **request**에서 전달받기
+// - 닉네임은 `최소 3자 이상, 알파벳 대소문자(a~z, A~Z), 숫자(0~9)`로 구성하기
+// - 비밀번호는 `최소 4자 이상이며, 닉네임과 같은 값이 포함된 경우 회원가입에 실패`로 만들기
+// - 비밀번호 확인은 비밀번호와 정확하게 일치하기
+// {  "nickname": "Developer",  "password": "1234",  "confirm": "1234"}
+// - 데이터베이스에 존재하는 닉네임을 입력한 채 회원가입 버튼을 누른 경우 "중복된 닉네임입니다." 라는 에러메세지를 **response**에 포함하기
+// # 201 회원가입에 성공한 경우
+// {  "message": "회원 가입에 성공하였습니다."}
 router.post('/signup', async (req, res, next) => {
   try {
     const { nickname, password, confirm } = req.body;
@@ -63,6 +57,7 @@ router.post('/signup', async (req, res, next) => {
     // 닉네임, 패스워드 validate using joi
     // const value = await postUserSchema.validateAsync(req.body);
     const { error, value } = postUserSchema.validate(req.body);
+    console.log(value);
 
     // Joi 유효성 검사 실패시 실패한 메시지 전달
     // *TODO*: message를 한국어로 전달하기 //
@@ -75,7 +70,6 @@ router.post('/signup', async (req, res, next) => {
       }
 
       // 회원가입 로직
-      // 이미 존재하는 유저인지 확인
       const isExistUser = await prisma.users.findFirst({
         where: { nickname },
       });
@@ -126,33 +120,28 @@ router.post('/signup', async (req, res, next) => {
 // # 400 예외 케이스에서 처리하지 못한 에러
 // {"errorMessage": "로그인에 실패하였습니다."}
 router.post('/login', async (req, res, next) => {
-  const { nickname, password } = req.body;
-  const user = await prisma.users.findFirst({ where: { nickname } });
-  console.log(nickname === user.nickname); // true
-  console.log(password === user.password); // false
-  console.log(password, user.password);
-  console.log(nickname, user.nickname);
-  console.log(await bcrypt.compare(password, user.password));
-  console.log(await bcrypt.compare(nickname, user.nickname));
+  try {
+    const { nickname, password } = req.body;
+    const user = await prisma.users.findFirst({ where: { nickname } });
 
-  if (!user) {
-    res.status(412).json({ errorMessage: '닉네임 또는 패스워드를 확인해주세요.' });
-  }
-  // 입력받은 사용자의 닉네임, 비밀번호와 데이터베이스에 저장된 닉네임, 비밀번호를 비교
-  else if (!(await bcrypt.compare(password, user.password)) || nickname != user.nickname) {
-    return res.status(400).json({ errorMessage: '로그인에 실패하였습니다.' });
-  }
+    if (!user) {
+      res.status(412).json({ errorMessage: '닉네임 또는 패스워드를 확인해주세요.' });
+    }
+    // 입력받은 사용자의 닉네임, 비밀번호와 데이터베이스에 저장된 닉네임, 비밀번호를 비교
+    else if (!(await bcrypt.compare(password, user.password)) || nickname != user.nickname) {
+      return res.status(400).json({ errorMessage: '로그인에 실패하였습니다.' });
+    }
 
-  //로그인 성공
-  const token = jwt.sign(
-    {
-      userId: user.userId,
-    },
-    'customized_secret_key'
-  );
-  // authorization
-  res.cookie('authorization', `Bearer ${token}`);
-  return res.status(200).json({ tokens: `${token}` });
+    //로그인 성공 시, 로그인에 성공한 유저의 정보를 JWT를 활용하여 클라이언트에게 Cookie로 전달하기
+    console.log('user.userId:', user.userId);
+    const token = jwt.sign({ userId: user.userId }, 'customized_secret_key');
+    // authorization 쿠키 전달
+    res.cookie('authorization', `Bearer ${token}`);
+    return res.status(200).json({ tokens: `${token}` });
+  } catch (error) {
+    console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
+    next(error);
+  }
 });
 
 /** 사용자 정보 조회 API 비즈니스 로직 */

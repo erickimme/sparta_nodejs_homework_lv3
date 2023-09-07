@@ -2,28 +2,30 @@
 
 import express from 'express';
 import { prisma } from '../utils/prisma/index.js';
+import authMiddleware from '../middlewares/auth.middleware.js';
 
 const router = express.Router(); // express.Router()를 이용해 라우터를 생성합니다.
 
 /* 게시물 생성 Logic */
 // 1. request body input : user, password, title, content
 // 2. validation check : user, password, title, content
+// 3. reqeust  {  "title": "안녕하세요 게시글 제목입니다.",  "content": "안녕하세요 content 입니다."}
 // 3. create post in Posts table : user, password, title, content
 // 4. response : {  "message": "게시글을 생성하였습니다."} 출력
 // 5. error handling : # 400 body 또는 params를 입력받지 못한 경우 { message: '데이터 형식이 올바르지 않습니다.' } 출력
+router.post('/posts', authMiddleware, async (req, res, next) => {
+  const { userId } = req.user;
+  const { title, content } = req.body;
+  console.log('Posting router');
+  console.log(userId, title, content);
 
-router.post('/posts', async (req, res, next) => {
-  const { user, password, title, content } = req.body;
-  console.log(user, password, title, content);
-
-  if (!user || !password || !title || !content) {
+  if (!title || !content) {
     res.status(400).json({ message: '데이터 형식이 올바르지 않습니다.' });
   } else {
     try {
       const createdPost = await prisma.posts.create({
         data: {
-          user,
-          password,
+          UserId: +userId,
           title,
           content,
         },
@@ -39,26 +41,34 @@ router.post('/posts', async (req, res, next) => {
 /*  전체 게시물 목록 조회 Logic */
 // 1. request body input : 없음
 // 2. validation check : 없음
-// 3. select all posts in Posts table and sort by createdAt in descending order
+// 3. 제목, 작성자명(nickname), 작성 날짜를 조회하기 + 작성 날짜 기준으로 내림차순 정렬하기
+//  (= select all posts in Posts table and sort by createdAt in descending order)
 // 4. response :
+// # 200 게시글 조회에 성공한 경우
 // {
-// "data":
-// [
+// "posts": [
 // {
 // "postId": "62d6d12cd88cadd496a9e54e",
-// "user": "Developer",
-// "title": "안녕하세요",
-// "createdAt": "2023-08-27T15:43:40.266Z"
+// "userId": "62d6d12cd23fadd49532124e",
+// "nickname": "Developer",
+// "title": "안녕하세요 2번째 게시글 제목입니다.",
+// "createdAt": "2023-08-25T07:45:56.000Z",
+// "updatedAt": "2023-08-25T07:45:56.000Z"
 // },
-//  {
-// "postId": "62d6cc66e28b7aff02e82954",
-// "user": "Developer",
-// "title": "안녕하세요",
-// "createdAt": "2023-08-27T15:23:18.433Z"
-//  }
+// {
+// "postId": "62d6d12cd88cadd496a9e54f",
+// "userId": "62d6d12cd23fadd49532124e",
+// "nickname": "Developer",
+// "title": "안녕하세요 게시글 제목입니다.",
+// "createdAt": "2023-08-25T07:45:15.000Z",
+// "updatedAt": "2023-08-25T07:45:15.000Z"
+// }
 // ]
 // }
-// 5. error handling : 없음
+// 5. error handling : # 400 예외 케이스에서 처리하지 못한 에러 {"errorMessage": "게시글 조회에 실패하였습니다."}
+
+//1. 전체 게시글 목록 조회 API
+
 router.get('/posts', async (req, res, next) => {
   try {
     const posts = await prisma.posts.findMany({
