@@ -12,6 +12,8 @@ const router = express.Router();
 // - 닉네임은 `최소 3자 이상, 알파벳 대소문자(a~z, A~Z), 숫자(0~9)`로 구성하기
 // - 비밀번호는 `최소 4자 이상이며, 닉네임과 같은 값이 포함된 경우 회원가입에 실패`로 만들기
 const nickname_pattern = /^[a-z|A-Z|0-9]+$/;
+// const re_nickname = /^[a-zA-Z0-9]{3,10}$/;
+// const re_password = /^[a-zA-Z0-9]{4,30}$/;
 const postUserSchema = joi.object({
   nickname: joi.string().min(3).pattern(new RegExp(nickname_pattern)).required().messages({
     'string.pattern.base': '닉네임은 알파벳 대소문자(a~z, A~Z), 숫자(0~9)`로 구성되어야합니다.',
