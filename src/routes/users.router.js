@@ -136,7 +136,7 @@ router.post('/login', async (req, res, next) => {
     }
 
     //로그인 성공 시, 로그인에 성공한 유저의 정보를 JWT를 활용하여 클라이언트에게 Cookie로 전달하기
-    const token = jwt.sign({ userId: user.userId }, 'customized_secret_key');
+    const token = jwt.sign({ userId: user.userId }, process.env.SECRET_KEY);
     // authorization 쿠키 전달
     res.cookie('authorization', `Bearer ${token}`);
     return res.status(200).json({ tokens: `${token}` });

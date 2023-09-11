@@ -14,9 +14,8 @@ export default async function (req, res, next) {
       // res.clearCookie(); // 인증에 실패하였을 경우 Cookie를 삭제합니다.
       throw new Error('토큰 타입이 일치하지 않습니다.');
     }
-
     // 서버에서 JWT가 맞는지 검증
-    const decodedToken = jwt.verify(tokenValue, 'customized_secret_key');
+    const decodedToken = jwt.verify(tokenValue, process.env.SECRET_KEY);
     const userId = decodedToken.userId;
 
     // JWT의 userId를 이용해 데이터베이스에서 사용자를 조회
@@ -33,7 +32,7 @@ export default async function (req, res, next) {
     // 다음 미들웨어로 넘어감
     next();
   } catch (error) {
-    res.clearCookie('authorization');
+    res.clearCookie('authorization'); // !
 
     // 토큰이 만료되었거나, 조작되었을 때, 에러 메시지를 다르게 출력합니다.
     switch (error.message) {
